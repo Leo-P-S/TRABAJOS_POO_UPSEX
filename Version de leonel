@@ -1,0 +1,215 @@
+class TresEnRaya():
+    """
+    //////////////// TRES EN RAYA //////////////
+          EL JUEGO CONSISTE EN EL CONOCIDO JUEGO DE "MICHI"
+          EN EL QUE AQUEL QUE COMPLETE UNA LÍNEA O DIAGONAL GANA EL JUEGO 
+          Reglas:
+          -> Si un usuario ingresa una posición que ya está ocupada, pierde su siguiente turno 
+          -> El juego terminará con una fila, columna o diagonal completada
+          -> EL FORMATO PARA INGRESAR SU POSICIÓN ES FILA:COLUMNA (1:1) 
+          -> Si todas las casillas están completas sin ganador, será un empate.
+    """
+    def __init__(self):
+        self.tablero = [['.', '.', '.'] for _ in range(3)]
+        self.ganadas_jugador_uno = 0
+        self.ganadas_jugador_dos = 0
+        self.partidas_empates = 0
+    
+    def incrementar_ganadas(self, jugador):
+        if jugador == 1:
+            self.ganadas_jugador_uno += 1
+        elif jugador == 2:
+            self.ganadas_jugador_dos += 1
+
+    def impresion(self):
+        print(f"    Columna  1     2     3")
+        for indice, fila in enumerate(self.tablero, start=1):
+            print(f"Fila {indice}: {fila}")
+    
+    def ingreso_de_jugador(self, jugador):
+        entrada = []
+        while not (entrada and len(entrada) == 2 and 1 <= entrada[0] <= 3 and 1 <= entrada[1] <= 3):
+            try:
+                entrada = list(map(int, input(f"Jugador {jugador}, ingrese las coordenadas (FILA:COLUMNA): ").split(":")))
+            except:
+                continue
+        return (entrada[0] - 1, entrada[1] - 1)  # Ajuste de índice
+
+    def validar_filas_columnas_diagonales(self, caracter):
+        if [caracter]*3 in self.tablero:  # Verificar filas
+            return True
+        # Verificar columnas
+        for columna in range(3):
+            if [self.tablero[fila][columna] for fila in range(3)] == [caracter] * 3:
+                return True
+        # Verificar diagonales
+        diagonal_normal = [self.tablero[i][i] for i in range(3)]
+        diagonal_inversa = [self.tablero[i][2 - i] for i in range(3)]
+        if [caracter] * 3 in (diagonal_normal, diagonal_inversa):
+            return True
+        return False
+
+    def actualizar_casilla(self, entrada, caracter):
+        if self.tablero[entrada[0]][entrada[1]] != '.':
+            return False
+        else:
+            self.tablero[entrada[0]][entrada[1]] = caracter
+            return True
+
+    def jugar(self):
+        sanciones = [False, False]
+        turno = 1
+        movimientos_restantes = 9
+
+        while movimientos_restantes > 0:
+            self.impresion()
+
+            caracter = 'X' if turno == 1 else 'O'
+
+            if sanciones[turno - 1]:
+                print(f"Jugador {turno} pierde su turno por sanción.")
+                sanciones[turno - 1] = False
+            else:
+                entrada = self.ingreso_de_jugador(turno)
+                if not self.actualizar_casilla(entrada, caracter):
+                    print(f"Jugador {turno}, la casilla ya está ocupada. Pierdes tu turno.")
+                    sanciones[turno - 1] = True
+                else:
+                    movimientos_restantes -= 1
+                    if self.validar_filas_columnas_diagonales(caracter):
+                        self.impresion()
+                        print(f"¡Jugador {turno} ha ganado!")
+                        self.incrementar_ganadas(turno)
+                        return
+            turno = 2 if turno == 1 else 1
+
+        self.impresion()
+        print("El juego ha terminado en empate.")
+        self.partidas_empates += 1
+
+
+from random import randint
+
+class AdivinarNumero():
+    """
+    //////////// ADIVINAR EL NÚMERO //////////
+          REGLAS:
+          -> Tiene 6 intentos para adivinar el número generado aleatoriamente.
+          -> El juego indicará si el número a adivinar es mayor o menor.
+    """
+    def __init__(self) -> None:
+        self.veces_perdidas = 0
+        self.veces_ganadas = 0
+        self.numero_con_mas_intentos = 0
+        self.mayor_intentos = 0
+
+    def descubrir_numero(self):
+        numero_a_descubrir = randint(1, 10)
+        intentos = 6
+        intentos_usados = 0
+
+        while intentos > 0:
+            try:
+                entrada = int(input("Ingrese un número entre 1 y 10: "))
+                intentos_usados += 1
+                if entrada < numero_a_descubrir:
+                    print("El número es mayor.")
+                elif entrada > numero_a_descubrir:
+                    print("El número es menor.")
+                else:
+                    print(f"¡Adivinaste en {intentos_usados} intentos!")
+                    self.veces_ganadas += 1
+                    if intentos_usados > self.mayor_intentos:
+                        self.mayor_intentos = intentos_usados
+                        self.numero_con_mas_intentos = numero_a_descubrir
+                    return
+            except:
+                continue
+            intentos -= 1
+        
+        print(f"El número era {numero_a_descubrir}. No adivinaste.")
+        self.veces_perdidas += 1
+
+
+class Estadisticas():
+    def __init__(self, tres_en_raya, adivinar_numero):
+        self.tres_en_raya = tres_en_raya
+        self.adivinar_numero = adivinar_numero
+
+    def reporte_victorias_tres_en_raya(self):
+        total_victorias = self.tres_en_raya.ganadas_jugador_uno + self.tres_en_raya.ganadas_jugador_dos
+        if total_victorias == 0:
+            print("No se han registrado victorias en Tres en Raya.")
+        else:
+            porcentaje_uno = (self.tres_en_raya.ganadas_jugador_uno / total_victorias) * 100
+            porcentaje_dos = (self.tres_en_raya.ganadas_jugador_dos / total_victorias) * 100
+            print(f"Porcentaje de victorias: Jugador 1: {porcentaje_uno:.2f}%, Jugador 2: {porcentaje_dos:.2f}%")
+
+    def reporte_mayor_intentos_adivinar(self):
+        if self.adivinar_numero.mayor_intentos == 0:
+            print("No se ha registrado ninguna partida de Adivina el Número.")
+        else:
+            print(f"El número que llevó más intentos para adivinar fue {self.adivinar_numero.numero_con_mas_intentos} con {self.adivinar_numero.mayor_intentos} intentos.")
+
+    def reporte_total_juegos(self):
+        total_juegos = (self.tres_en_raya.ganadas_jugador_uno + self.tres_en_raya.ganadas_jugador_dos +
+                        self.tres_en_raya.partidas_empates + self.adivinar_numero.veces_ganadas + 
+                        self.adivinar_numero.veces_perdidas)
+        print(f"Total de juegos jugados: {total_juegos}")
+
+
+class Consola():
+    def __init__(self) -> None:
+        self.tres_en_raya = TresEnRaya()
+        self.adivinar_numero = AdivinarNumero()
+        self.estadisticas = Estadisticas(self.tres_en_raya, self.adivinar_numero)
+
+    def menu(self):
+        while True:
+            print("""
+                //////// MENÚ PRINCIPAL ////////   
+                1. Jugar Tres en Raya
+                2. Jugar Adivina el Número
+                3. Estadísticas
+                4. Reportes
+                5. Salir
+            """)
+            opcion = input("Seleccione una opción: ")
+
+            if opcion == '1':
+                print(self.tres_en_raya.__doc__)
+                self.tres_en_raya.jugar()
+            elif opcion == '2':
+                print(self.adivinar_numero.__doc__)
+                self.adivinar_numero.descubrir_numero()
+            elif opcion == '3':
+                self.estadisticas.reporte_total_juegos()
+            elif opcion == '4':
+                print("""
+                    //////// REPORTES ////////   
+                    1. Porcentaje de victorias en Tres en Raya
+                    2. Número con más intentos en Adivina el Número
+                    3. Total de juegos jugados
+                    4. Volver
+                """)
+                reporte_opcion = input("Seleccione un reporte: ")
+                if reporte_opcion == '1':
+                    self.estadisticas.reporte_victorias_tres_en_raya()
+                elif reporte_opcion == '2':
+                    self.estadisticas.reporte_mayor_intentos_adivinar()
+                elif reporte_opcion == '3':
+                    self.estadisticas.reporte_total_juegos()
+                elif reporte_opcion == '4':
+                    continue
+                else:
+                    print("Opción no válida. Intente de nuevo.")
+            elif opcion == '5':
+                print("¡Gracias por jugar!")
+                break
+            else:
+                print("Opción no válida. Intente de nuevo.")
+
+
+if __name__ == "__main__":
+    consola = Consola()
+    consola.menu()
